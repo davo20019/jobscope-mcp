@@ -1,0 +1,17 @@
+name = "jobscope-mcp"
+main = "src/index.ts"
+compatibility_date = "2026-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Durable Object binding required by the agents SDK's McpAgent.
+# Session state is held per-connection and is ephemeral.
+[[durable_objects.bindings]]
+name = "MCP_OBJECT"
+class_name = "JobscopeMcp"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["JobscopeMcp"]
+
+[observability]
+enabled = true
