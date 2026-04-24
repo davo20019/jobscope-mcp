@@ -30,6 +30,12 @@ describe("leverAdapter", () => {
     expect(job.title).toBeTruthy();
   });
 
+  it("fetchJob returns null on upstream 404", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response("{}", { status: 404 }));
+    const result = await leverAdapter.fetchJob("plaid", "123", { fetchImpl });
+    expect(result).toBeNull();
+  });
+
   it("maps commitment to employment_type", () => {
     const raw = {
       source_id: "1",

@@ -6,6 +6,7 @@ export interface FetchJsonOptions {
   fetchImpl?: FetchImpl;
   headers?: Record<string, string>;
   retryDelayMs?: number;
+  timeoutMs?: number;
 }
 
 export async function fetchJson<T = unknown>(
@@ -19,13 +20,22 @@ export async function fetchJson<T = unknown>(
     ...(options.headers ?? {}),
   };
 
+  const timeoutMs = options.timeoutMs ?? 15000;
+
   const attempt = async (): Promise<Response> => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      return await fetchImpl(url, { headers });
+      return await fetchImpl(url, { headers, signal: controller.signal });
     } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") {
+        throw new NetworkError(`fetch timed out after ${timeoutMs}ms`);
+      }
       throw new NetworkError(
         e instanceof Error ? `fetch failed: ${e.message}` : "fetch failed"
       );
+    } finally {
+      clearTimeout(timer);
     }
   };
 

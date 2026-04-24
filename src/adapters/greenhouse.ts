@@ -1,6 +1,7 @@
 import { fetchJson, type FetchImpl } from "./fetch";
 import type { AtsAdapter, RawJob } from "./types";
 import { JobSchema, JobDetailSchema } from "../schemas";
+import { NotFoundError } from "../errors";
 import type { CompanyRef, Job, JobDetail } from "../schemas";
 
 type GreenhouseRawJob = {
@@ -61,7 +62,7 @@ async function fetchJob(
     const body = await fetchJson<GreenhouseRawJob>(url, { fetchImpl: opts.fetchImpl });
     return { source_id: String(body.id), raw: body };
   } catch (e) {
-    if ((e as { name?: string })?.name === "NotFoundError") return null;
+    if (e instanceof NotFoundError) return null;
     throw e;
   }
 }

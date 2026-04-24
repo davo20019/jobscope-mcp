@@ -38,6 +38,10 @@ async function fetchJobs(atsSlug: string, opts: AshbyFetchOptions = {}): Promise
   return (body.jobs ?? []).map((j) => ({ source_id: j.id, raw: j }));
 }
 
+// Ashby's public posting API does not expose a per-job endpoint, so we fetch
+// the whole board and scan. The edge cache and in-request batching keep this
+// acceptable; callers should prefer search_jobs for discovery and reserve
+// fetchJob for a small number of targeted lookups.
 async function fetchJob(
   atsSlug: string,
   jobId: string,

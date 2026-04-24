@@ -5,7 +5,13 @@ describe("listCompaniesTool", () => {
   it("returns companies and total", async () => {
     const r = await listCompaniesTool({ limit: 100 });
     expect(r.companies.length).toBeGreaterThan(0);
-    expect(r.total).toBe(r.companies.length);
+    expect(r.total).toBeGreaterThanOrEqual(r.companies.length);
+  });
+
+  it("total reflects match count, not trim count", async () => {
+    const r = await listCompaniesTool({ limit: 1 });
+    expect(r.companies.length).toBe(1);
+    expect(r.total).toBeGreaterThan(1);
   });
 
   it("filters by ats", async () => {

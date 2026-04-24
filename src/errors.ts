@@ -1,5 +1,9 @@
 export class JobscopeError extends Error {
   readonly jobscopeKind: true = true;
+  constructor(message?: string) {
+    super(message);
+    this.name = new.target.name;
+  }
 }
 export class NotFoundError extends JobscopeError {}
 export class RateLimitError extends JobscopeError {}

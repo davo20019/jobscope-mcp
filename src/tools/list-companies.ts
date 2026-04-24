@@ -17,5 +17,5 @@ export async function listCompaniesTool(rawInput: unknown): Promise<{
   const input = ListCompaniesInputSchema.parse(rawInput);
   const matches = listCompanies({ query: input.query, ats: input.ats, tags: input.tags });
   const trimmed = matches.slice(0, input.limit);
-  return { companies: trimmed, total: trimmed.length };
+  return { companies: trimmed, total: matches.length };
 }

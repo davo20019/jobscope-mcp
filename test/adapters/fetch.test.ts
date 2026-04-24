@@ -50,4 +50,18 @@ describe("fetchJson", () => {
       NetworkError
     );
   });
+
+  it("wraps slow responses in NetworkError when timeout elapses", async () => {
+    const stub = vi.fn().mockImplementation((_url: string, init?: RequestInit) => {
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () =>
+          reject(new DOMException("aborted", "AbortError"))
+        );
+        // never resolves on its own
+      });
+    });
+    await expect(
+      fetchJson("https://example.com/x", { fetchImpl: stub, timeoutMs: 10 })
+    ).rejects.toBeInstanceOf(NetworkError);
+  });
 });

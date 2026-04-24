@@ -34,6 +34,12 @@ describe("greenhouseAdapter", () => {
     expect(["remote", "hybrid", "onsite", "unknown"]).toContain(job.remote);
   });
 
+  it("fetchJob returns null on upstream 404", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response("{}", { status: 404 }));
+    const result = await greenhouseAdapter.fetchJob("stripe", "123", { fetchImpl });
+    expect(result).toBeNull();
+  });
+
   it("normalize infers remote=remote when location contains 'Remote'", () => {
     const raw = {
       source_id: "1",

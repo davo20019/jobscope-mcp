@@ -1,5 +1,6 @@
 import { fetchJson, type FetchImpl } from "./fetch";
 import type { AtsAdapter, RawJob } from "./types";
+import { NotFoundError } from "../errors";
 import { JobSchema, JobDetailSchema } from "../schemas";
 import type { CompanyRef, Job, JobDetail } from "../schemas";
 
@@ -56,7 +57,7 @@ async function fetchJob(
     const body = await fetchJson<LeverRawJob>(url, { fetchImpl: opts.fetchImpl });
     return { source_id: body.id, raw: body };
   } catch (e) {
-    if ((e as { name?: string })?.name === "NotFoundError") return null;
+    if (e instanceof NotFoundError) return null;
     throw e;
   }
 }
