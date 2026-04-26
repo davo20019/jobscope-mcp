@@ -41,7 +41,7 @@ describe("runSearch", () => {
   it("fans out across adapters and returns filtered, ranked, trimmed results", async () => {
     const gh = fakeAdapter("greenhouse", [mkJob("1", "Backend Engineer"), mkJob("2", "Frontend Engineer")]);
     const result = await runSearch({
-      input: { query: "backend", remote: "any", limit: 10 },
+      input: { query: "backend", remote: "any", limit: 10, posted_since: null },
       companies: [company],
       adapters: [gh],
     });
@@ -62,7 +62,7 @@ describe("runSearch", () => {
       toDetail: (r) => r.raw as any,
     };
     const result = await runSearch({
-      input: { remote: "any", limit: 10 },
+      input: { remote: "any", limit: 10, posted_since: null },
       companies: [company],
       adapters: [gh],
     });
