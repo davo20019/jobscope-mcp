@@ -12,6 +12,8 @@ interface RateLimitBinding {
 interface Env {
   RATE_LIMITER?: RateLimitBinding;
   MCP_OBJECT: DurableObjectNamespace;
+  USAJOBS_API_KEY?: string;
+  USAJOBS_USER_AGENT?: string;
 }
 
 export default {

@@ -2,6 +2,7 @@ import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { isKnownError } from "./errors";
+import { configureUsajobs } from "./adapters/usajobs";
 import {
   searchJobsTool,
   searchJobsInputSchema,
@@ -36,6 +37,14 @@ export class JobscopeMcp extends McpAgent {
   server = new McpServer({ name: "jobscope-mcp", version: "0.1.0" });
 
   async init() {
+    // Configure USAJobs adapter from secrets if available; adapter degrades
+    // gracefully (returns []) when no key is configured.
+    const env = (this as unknown as { env?: { USAJOBS_API_KEY?: string; USAJOBS_USER_AGENT?: string } }).env;
+    configureUsajobs({
+      apiKey: env?.USAJOBS_API_KEY,
+      userAgent: env?.USAJOBS_USER_AGENT,
+    });
+
     this.server.registerTool(
       "search_jobs",
       { description: SEARCH_JOBS_DESCRIPTION, inputSchema: searchJobsInputSchema.shape },
