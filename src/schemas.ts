@@ -57,7 +57,9 @@ export const SearchJobsInputSchema = z.object({
   remote: z.enum(["any", "remote", "hybrid", "onsite"]).default("any"),
   companies: z.array(z.string()).optional(),
   ats: z.array(z.string()).optional(),
-  posted_since: z.string().optional(),
+  posted_since: z
+    .union([z.string(), z.null()])
+    .default("30d"),
   limit: z.number().int().min(1).max(200).default(50),
 });
 export type SearchJobsInput = z.infer<typeof SearchJobsInputSchema>;

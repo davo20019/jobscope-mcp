@@ -56,10 +56,26 @@ describe("schemas", () => {
     ).not.toThrow();
   });
 
-  it("applies defaults on SearchJobsInput", () => {
+  it("applies defaults on SearchJobsInput including posted_since '30d'", () => {
     const parsed = SearchJobsInputSchema.parse({});
     expect(parsed.remote).toBe("any");
     expect(parsed.limit).toBe(50);
+    expect(parsed.posted_since).toBe("30d");
+  });
+
+  it("accepts posted_since as ISO date string", () => {
+    const parsed = SearchJobsInputSchema.parse({ posted_since: "2026-01-01" });
+    expect(parsed.posted_since).toBe("2026-01-01");
+  });
+
+  it("accepts posted_since as relative shorthand", () => {
+    const parsed = SearchJobsInputSchema.parse({ posted_since: "7d" });
+    expect(parsed.posted_since).toBe("7d");
+  });
+
+  it("accepts posted_since as null to disable filtering", () => {
+    const parsed = SearchJobsInputSchema.parse({ posted_since: null });
+    expect(parsed.posted_since).toBeNull();
   });
 
   it("rejects SearchJobsInput with limit over 200", () => {
