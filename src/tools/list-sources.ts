@@ -11,7 +11,6 @@ export const listSourcesInputSchema = z.object({}).default({});
 
 export interface SourceInfo {
   name: string;
-  job_count_estimate: number; // -1 = unknown (not computed in stateless v1)
   company_count: number;
   last_refreshed_at: string;
 }
@@ -21,7 +20,6 @@ export async function listSourcesTool(_raw: unknown): Promise<{ sources: SourceI
   const refreshed = directoryGeneratedAt();
   const sources = adapters.map((a) => ({
     name: a.name,
-    job_count_estimate: -1,
     company_count: dir.companies.filter((c) => c.ats === a.name).length,
     last_refreshed_at: refreshed,
   }));
