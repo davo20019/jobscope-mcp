@@ -3,6 +3,7 @@ import type { AtsAdapter, RawJob } from "./types";
 import { NotFoundError } from "../errors";
 import { JobSchema, JobDetailSchema } from "../schemas";
 import type { CompanyRef, Job, JobDetail } from "../schemas";
+import { parsePayRangeText, type Compensation } from "../compensation";
 
 type LeverRawJob = {
   id: string;
@@ -37,6 +38,22 @@ function mapRemote(workplaceType?: string, location?: string): Job["remote"] {
   if (loc.includes("hybrid")) return "hybrid";
   if (loc.length > 0) return "onsite";
   return "unknown";
+}
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function compensationFromLists(lists?: Array<{ text?: string; content?: string }>): Compensation | null {
+  if (!lists) return null;
+  for (const entry of lists) {
+    const heading = (entry.text ?? "").toLowerCase();
+    if (!heading.match(/compensation|salary|pay range/)) continue;
+    const text = stripHtml(entry.content ?? "");
+    const parsed = parsePayRangeText(text);
+    if (parsed) return parsed;
+  }
+  return null;
 }
 
 export interface LeverFetchOptions { fetchImpl?: FetchImpl }
@@ -92,7 +109,7 @@ function toDetail(raw: RawJob, company: CompanyRef): JobDetail {
     description: r.descriptionPlain ?? "",
     description_html: r.description ?? "",
     team: r.categories?.team ?? null,
-    compensation: null,
+    compensation: compensationFromLists(r.lists),
     raw: r,
   };
   return JobDetailSchema.parse(detail);

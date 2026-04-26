@@ -56,4 +56,53 @@ describe("leverAdapter", () => {
     expect(job.employment_type).toBe("full_time");
     expect(job.remote).toBe("remote");
   });
+
+  describe("leverAdapter — compensation", () => {
+    it("toDetail extracts compensation from a 'Compensation' lists entry", () => {
+      const raw = {
+        source_id: "X",
+        raw: {
+          id: "X",
+          text: "Engineer",
+          categories: { team: "Eng", location: "Remote", commitment: "Full-time" },
+          workplaceType: "remote",
+          createdAt: 1713139200000,
+          hostedUrl: "https://jobs.lever.co/x/X",
+          applyUrl: "https://jobs.lever.co/x/X/apply",
+          descriptionPlain: "hi",
+          description: "<p>hi</p>",
+          lists: [
+            { text: "Compensation", content: "<p>$140,000 - $180,000 USD</p>" },
+          ],
+        },
+      };
+      const detail = leverAdapter.toDetail(raw, company);
+      expect(detail.compensation).toEqual({
+        min: 140000,
+        max: 180000,
+        currency: "USD",
+        interval: "yearly",
+      });
+    });
+
+    it("toDetail returns null compensation when no salary list entry", () => {
+      const raw = {
+        source_id: "X",
+        raw: {
+          id: "X",
+          text: "Engineer",
+          categories: { team: "Eng", location: "Remote", commitment: "Full-time" },
+          workplaceType: "remote",
+          createdAt: 1713139200000,
+          hostedUrl: "https://jobs.lever.co/x/X",
+          applyUrl: "https://jobs.lever.co/x/X/apply",
+          descriptionPlain: "hi",
+          description: "<p>hi</p>",
+          lists: [],
+        },
+      };
+      const detail = leverAdapter.toDetail(raw, company);
+      expect(detail.compensation).toBeNull();
+    });
+  });
 });
