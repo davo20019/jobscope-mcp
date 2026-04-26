@@ -3,6 +3,12 @@ main = "src/index.ts"
 compatibility_date = "2026-04-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Secrets required (set via `wrangler secret put`):
+#   USAJOBS_API_KEY     - free, register at https://developer.usajobs.gov/APIRequest/Index
+#   USAJOBS_USER_AGENT  - "jobscope-mcp/0.2.0 (+your-email)" (USAJobs requires a contact email)
+# The USAJobs adapter degrades gracefully (returns []) if these are absent.
+# For local development, set the same keys in `.dev.vars` (gitignored).
+
 # Keep the *.workers.dev URL live so early-share links stay alive while the
 # canonical URL (below) takes over.
 workers_dev = true
