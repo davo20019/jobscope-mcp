@@ -3,6 +3,7 @@ import type { AtsAdapter, RawJob } from "./types";
 import { JobSchema, JobDetailSchema } from "../schemas";
 import { NotFoundError } from "../errors";
 import type { CompanyRef, Job, JobDetail } from "../schemas";
+import { parsePayRangeText, type Compensation } from "../compensation";
 
 type GreenhouseRawJob = {
   id: number;
@@ -31,8 +32,33 @@ function inferRemote(locationText: string): "remote" | "hybrid" | "onsite" | "un
   if (!lower) return "unknown";
   if (lower.includes("remote")) return "remote";
   if (lower.includes("hybrid")) return "hybrid";
-  if (lower.length > 0) return "onsite";
   return "unknown";
+}
+
+function compensationFromMetadata(metadata: unknown): Compensation | null {
+  if (!Array.isArray(metadata)) return null;
+  for (const entry of metadata) {
+    const e = entry as { name?: string; value?: unknown };
+    if (typeof e.name !== "string") continue;
+    if (!e.name.toLowerCase().match(/pay range|salary range|compensation/)) continue;
+    if (typeof e.value === "string") {
+      const parsed = parsePayRangeText(e.value);
+      if (parsed) return parsed;
+    }
+    if (Array.isArray(e.value)) {
+      const min = parseFloat(String((e.value as unknown[])[0] ?? ""));
+      const max = parseFloat(String((e.value as unknown[])[1] ?? ""));
+      if (!isNaN(min) || !isNaN(max)) {
+        return {
+          min: !isNaN(min) ? min : undefined,
+          max: !isNaN(max) ? max : undefined,
+          currency: "USD",
+          interval: "yearly",
+        };
+      }
+    }
+  }
+  return null;
 }
 
 function locationList(raw: GreenhouseRawJob): string[] {
@@ -98,7 +124,7 @@ function toDetail(raw: RawJob, company: CompanyRef): JobDetail {
     description: plain,
     description_html: r.content ?? "",
     team: r.departments?.[0]?.name ?? null,
-    compensation: null,
+    compensation: compensationFromMetadata(r.metadata),
     raw: r,
   };
   return JobDetailSchema.parse(detail);

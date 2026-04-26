@@ -57,3 +57,64 @@ describe("greenhouseAdapter", () => {
     expect(job.remote).toBe("remote");
   });
 });
+
+describe("greenhouseAdapter — v2 improvements", () => {
+  it("returns 'unknown' instead of 'onsite' when location has no remote/hybrid signal but is non-empty", () => {
+    const raw = {
+      source_id: "1",
+      raw: {
+        id: 1,
+        title: "Engineer",
+        location: { name: "San Francisco, CA" },
+        absolute_url: "https://x",
+        updated_at: "2026-04-20T00:00:00Z",
+        departments: [],
+        content: "hi",
+      },
+    };
+    const job = greenhouseAdapter.normalize(raw, company);
+    expect(job.remote).toBe("unknown");
+  });
+
+  it("toDetail surfaces compensation parsed from metadata pay-range field", () => {
+    const raw = {
+      source_id: "1",
+      raw: {
+        id: 1,
+        title: "Engineer",
+        location: { name: "Remote" },
+        absolute_url: "https://x",
+        updated_at: "2026-04-20T00:00:00Z",
+        departments: [],
+        content: "<p>desc</p>",
+        metadata: [
+          { name: "Pay Range", value: "$200,000 - $260,000 USD", value_type: "currency_range" },
+        ],
+      },
+    };
+    const detail = greenhouseAdapter.toDetail(raw, company);
+    expect(detail.compensation).toEqual({
+      min: 200000,
+      max: 260000,
+      currency: "USD",
+      interval: "yearly",
+    });
+  });
+
+  it("toDetail returns null compensation when no pay-range metadata", () => {
+    const raw = {
+      source_id: "1",
+      raw: {
+        id: 1,
+        title: "Engineer",
+        location: { name: "Remote" },
+        absolute_url: "https://x",
+        updated_at: "2026-04-20T00:00:00Z",
+        departments: [],
+        content: "hi",
+      },
+    };
+    const detail = greenhouseAdapter.toDetail(raw, company);
+    expect(detail.compensation).toBeNull();
+  });
+});
