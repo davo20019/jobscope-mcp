@@ -9,42 +9,45 @@ export interface FetchJsonOptions {
   timeoutMs?: number;
 }
 
-export async function fetchJson<T = unknown>(
+const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_USER_AGENT = "jobscope-mcp/0.2.0 (+https://github.com/davo20019/jobscope-mcp)";
+
+async function attempt(
   url: string,
-  options: FetchJsonOptions = {}
+  init: RequestInit,
+  fetchImpl: FetchImpl,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetchImpl(url, { ...init, signal: controller.signal });
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      throw new NetworkError(`timed out after ${timeoutMs}ms: ${url}`);
+    }
+    throw new NetworkError(
+      e instanceof Error ? `fetch failed: ${e.message}` : "fetch failed"
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function executeRequest<T>(
+  url: string,
+  init: RequestInit,
+  options: FetchJsonOptions
 ): Promise<T> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const headers = {
-    accept: "application/json",
-    "user-agent": "jobscope-mcp/0.1.0 (+https://github.com/davo20019/jobscope-mcp)",
-    ...(options.headers ?? {}),
-  };
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  const timeoutMs = options.timeoutMs ?? 15000;
-
-  const attempt = async (): Promise<Response> => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      return await fetchImpl(url, { headers, signal: controller.signal });
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "AbortError") {
-        throw new NetworkError(`fetch timed out after ${timeoutMs}ms`);
-      }
-      throw new NetworkError(
-        e instanceof Error ? `fetch failed: ${e.message}` : "fetch failed"
-      );
-    } finally {
-      clearTimeout(timer);
-    }
-  };
-
-  let response = await attempt();
+  let response = await attempt(url, init, fetchImpl, timeoutMs);
 
   if (response.status === 429) {
     const delay = options.retryDelayMs ?? 1000;
     await new Promise((r) => setTimeout(r, delay));
-    response = await attempt();
+    response = await attempt(url, init, fetchImpl, timeoutMs);
     if (response.status === 429) {
       throw new RateLimitError(`rate limited by ${new URL(url).host}`);
     }
@@ -64,4 +67,30 @@ export async function fetchJson<T = unknown>(
       e instanceof Error ? `parse failed: ${e.message}` : "parse failed"
     );
   }
+}
+
+export async function fetchJson<T = unknown>(
+  url: string,
+  options: FetchJsonOptions = {}
+): Promise<T> {
+  const headers = {
+    accept: "application/json",
+    "user-agent": DEFAULT_USER_AGENT,
+    ...(options.headers ?? {}),
+  };
+  return executeRequest<T>(url, { method: "GET", headers }, options);
+}
+
+export async function postJson<T = unknown>(
+  url: string,
+  body: unknown,
+  options: FetchJsonOptions = {}
+): Promise<T> {
+  const headers = {
+    accept: "application/json",
+    "content-type": "application/json",
+    "user-agent": DEFAULT_USER_AGENT,
+    ...(options.headers ?? {}),
+  };
+  return executeRequest<T>(url, { method: "POST", headers, body: JSON.stringify(body) }, options);
 }

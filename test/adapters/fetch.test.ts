@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fetchJson } from "../../src/adapters/fetch";
+import { fetchJson, postJson } from "../../src/adapters/fetch";
 import { NetworkError, NotFoundError, RateLimitError } from "../../src/errors";
 
 function mockResponse(status: number, body: unknown, init?: ResponseInit): Response {
@@ -63,5 +63,41 @@ describe("fetchJson", () => {
     await expect(
       fetchJson("https://example.com/x", { fetchImpl: stub, timeoutMs: 10 })
     ).rejects.toBeInstanceOf(NetworkError);
+  });
+});
+
+describe("postJson", () => {
+  it("sends a POST with JSON body and returns parsed response", async () => {
+    const stub = vi.fn().mockImplementation((url: string, init: RequestInit) => {
+      expect(init.method).toBe("POST");
+      expect(init.body).toBe(JSON.stringify({ q: "x" }));
+      const headers = init.headers as Record<string, string>;
+      expect(headers["content-type"]).toBe("application/json");
+      return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    });
+    const result = await postJson("https://example.com/search", { q: "x" }, { fetchImpl: stub });
+    expect(result).toEqual({ ok: true });
+  });
+
+  it("respects custom headers on POST", async () => {
+    const stub = vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      const headers = init.headers as Record<string, string>;
+      expect(headers["x-custom"]).toBe("yes");
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    });
+    await postJson("https://example.com/x", {}, { fetchImpl: stub, headers: { "x-custom": "yes" } });
+    expect(stub).toHaveBeenCalledOnce();
+  });
+
+  it("retries POST once on 429 like fetchJson does", async () => {
+    const mockResp = (status: number, body: unknown) =>
+      new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+    const stub = vi
+      .fn()
+      .mockResolvedValueOnce(mockResp(429, {}))
+      .mockResolvedValueOnce(mockResp(200, { ok: true }));
+    const result = await postJson("https://example.com/x", {}, { fetchImpl: stub, retryDelayMs: 1 });
+    expect(result).toEqual({ ok: true });
+    expect(stub).toHaveBeenCalledTimes(2);
   });
 });
