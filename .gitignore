@@ -4,3 +4,8 @@ node_modules
 dist
 *.log
 .DS_Store
+
+# Local-only working notes: design specs and implementation plans live
+# here while in progress. They are intentionally not tracked in this repo
+# so the public history stays focused on shipped code.
+docs/
