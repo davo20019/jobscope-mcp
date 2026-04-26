@@ -2,8 +2,10 @@ import { z } from "zod";
 import { adapters } from "../adapters/registry";
 import { directoryGeneratedAt, loadDirectory } from "../directory/loader";
 
-export const LIST_SOURCES_DESCRIPTION =
-  "Return the list of supported ATS sources with how many companies from the directory use each source and when the directory was built.";
+export const LIST_SOURCES_DESCRIPTION = [
+  "Return the list of supported ATS sources with how many companies from the directory use each source and when the directory was built.",
+  "Sources cover tech (Greenhouse, Lever, Ashby), enterprise (Workday), and US federal (USAJobs).",
+].join(" ");
 
 export const listSourcesInputSchema = z.object({}).default({});
 

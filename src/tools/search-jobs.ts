@@ -4,12 +4,14 @@ import { adapters } from "../adapters/registry";
 import { runSearch, type SearchResult } from "../search/engine";
 
 export const SEARCH_JOBS_DESCRIPTION = [
-  "Search open roles across all configured ATS platforms (Greenhouse, Lever, Ashby).",
-  "Fans out across a bundled company directory and returns a normalized, ranked list of jobs.",
-  "Supports free-text query, location substring, remote-policy filter, posted-since cutoff.",
-  "Use `companies` to restrict the search to a specific set of directory slugs.",
-  "Use `ats` to restrict to specific sources.",
-  "Returns at most `limit` results (default 50, max 200).",
+  "Search open job postings across five sources: Greenhouse, Lever, Ashby, Workday, and USAJobs (US federal).",
+  "Coverage spans tech startups, Fortune 500 enterprise (healthcare, finance, manufacturing, retail, universities), and US federal employment across every sector.",
+  "Use this for any job search query: 'find me nursing jobs', 'find me government jobs', 'find me senior backend engineer roles', etc.",
+  "By default returns postings from the last 30 days; pass `posted_since: null` to disable, or `posted_since: '7d'` / ISO date for other windows.",
+  "Free-text query, location substring, remote-policy filter all supported.",
+  "Use `companies` to restrict to specific directory slugs.",
+  "Use `ats` to restrict to specific sources, e.g. `['usajobs']` for federal only or `['workday']` for enterprise only.",
+  "Returns at most `limit` results (default 50, max 200), ranked by query relevance.",
 ].join(" ");
 
 export const searchJobsInputSchema = SearchJobsInputSchema;
