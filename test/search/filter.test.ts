@@ -43,3 +43,22 @@ describe("applyFilters", () => {
     expect(applyFilters([base, old], { posted_since: "2025-01-01" }).length).toBe(1);
   });
 });
+
+describe("applyFilters — relative posted_since", () => {
+  it("interprets '7d' as last 7 days", () => {
+    const recent = { ...base, posted_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString() };
+    const oldJob = { ...base, posted_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString() };
+    expect(applyFilters([recent, oldJob], { posted_since: "7d" }).length).toBe(1);
+  });
+
+  it("interprets '30d' as last 30 days", () => {
+    const recent = { ...base, posted_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString() };
+    const veryOld = { ...base, posted_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString() };
+    expect(applyFilters([recent, veryOld], { posted_since: "30d" }).length).toBe(1);
+  });
+
+  it("disables filtering when posted_since is null", () => {
+    const oldJob = { ...base, posted_at: "2020-01-01T00:00:00Z" };
+    expect(applyFilters([oldJob], { posted_since: null }).length).toBe(1);
+  });
+});
