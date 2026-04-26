@@ -2,6 +2,7 @@ import { fetchJson, type FetchImpl } from "./fetch";
 import type { AtsAdapter, RawJob } from "./types";
 import { JobSchema, JobDetailSchema } from "../schemas";
 import type { CompanyRef, Job, JobDetail } from "../schemas";
+import { parsePayRangeText } from "../compensation";
 
 type AshbyRawJob = {
   id: string;
@@ -85,12 +86,13 @@ function normalize(raw: RawJob, company: CompanyRef): Job {
 function toDetail(raw: RawJob, company: CompanyRef): JobDetail {
   const base = normalize(raw, company);
   const r = raw.raw as AshbyRawJob;
+  const compensation = r.compensationTierSummary ? parsePayRangeText(r.compensationTierSummary) : null;
   const detail = {
     ...base,
     description: r.descriptionPlain ?? "",
     description_html: r.descriptionHtml ?? "",
     team: r.team ?? null,
-    compensation: null,
+    compensation,
     raw: r,
   };
   return JobDetailSchema.parse(detail);
