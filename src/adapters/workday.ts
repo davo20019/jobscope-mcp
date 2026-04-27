@@ -2,6 +2,13 @@ import { postJson, type FetchImpl } from "./fetch";
 import type { AtsAdapter, RawJob } from "./types";
 import { JobSchema, JobDetailSchema } from "../schemas";
 import type { CompanyRef, Job, JobDetail } from "../schemas";
+import {
+  parseSetCookieHeaders,
+  buildCookieHeader,
+  getCachedCookies,
+  setCachedCookies,
+  type CookieEntry,
+} from "./cookie-utils";
 
 type WorkdayRawJob = {
   title: string;
@@ -13,6 +20,7 @@ type WorkdayRawJob = {
 
 const PAGE_SIZE = 20;
 const MAX_JOBS_PER_COMPANY = 200;
+const BROWSER_USER_AGENT = "jobscope-mcp/0.3.0 (+https://github.com/davo20019/jobscope-mcp)";
 
 export interface WorkdayFetchOptions {
   fetchImpl?: FetchImpl;
@@ -31,16 +39,61 @@ function buildUrl(atsSlug: string): string {
   return `https://${tenant}.${shard}.myworkdayjobs.com/wday/cxs/${tenant}/${site}/jobs`;
 }
 
+function buildCareerPageUrl(atsSlug: string): string {
+  const { tenant, shard, site } = parseSlug(atsSlug);
+  return `https://${tenant}.${shard}.myworkdayjobs.com/${site}`;
+}
+
+async function bootstrapCookies(atsSlug: string, fetchImpl: FetchImpl): Promise<CookieEntry | null> {
+  const url = buildCareerPageUrl(atsSlug);
+  let response: Response;
+  try {
+    response = await fetchImpl(url, {
+      method: "GET",
+      headers: {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "User-Agent": BROWSER_USER_AGENT,
+      },
+    });
+  } catch {
+    return null;
+  }
+  if (!response.ok) return null;
+  const { cookies, csrfToken } = parseSetCookieHeaders(response);
+  if (cookies.size === 0) return null;
+  return setCachedCookies(atsSlug, {
+    cookieHeader: buildCookieHeader(cookies),
+    csrfToken: csrfToken ?? "",
+  });
+}
+
+async function getOrBootstrapCookies(atsSlug: string, fetchImpl: FetchImpl): Promise<CookieEntry | null> {
+  const cached = getCachedCookies(atsSlug);
+  if (cached) return cached;
+  return bootstrapCookies(atsSlug, fetchImpl);
+}
+
 async function fetchJobs(atsSlug: string, opts: WorkdayFetchOptions = {}): Promise<RawJob[]> {
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const cookies = await getOrBootstrapCookies(atsSlug, fetchImpl);
   const url = buildUrl(atsSlug);
   const all: RawJob[] = [];
   let offset = 0;
+
+  const baseHeaders: Record<string, string> = {};
+  if (cookies) {
+    baseHeaders["Cookie"] = cookies.cookieHeader;
+    if (cookies.csrfToken) {
+      baseHeaders["X-CALYPSO-CSRF-TOKEN"] = cookies.csrfToken;
+    }
+  }
 
   while (all.length < MAX_JOBS_PER_COMPANY) {
     const body = await postJson<{ total?: number; jobPostings?: WorkdayRawJob[] }>(
       url,
       { appliedFacets: {}, limit: PAGE_SIZE, offset, searchText: "" },
-      { fetchImpl: opts.fetchImpl }
+      { fetchImpl, headers: baseHeaders }
     );
     const page = body.jobPostings ?? [];
     if (page.length === 0) break;

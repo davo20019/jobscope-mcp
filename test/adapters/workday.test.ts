@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import fixture from "../fixtures/workday/jobs-nvidia.json";
 import { workdayAdapter } from "../../src/adapters/workday";
+import { clearCookieCache } from "../../src/adapters/cookie-utils";
 
 const company = {
   name: "NVIDIA",
@@ -9,6 +10,8 @@ const company = {
   ats_slug: "nvidia:wd5:NVIDIAExternalCareerSite",
 };
 
+beforeEach(() => clearCookieCache());
+
 describe("workdayAdapter", () => {
   it("has name 'workday'", () => {
     expect(workdayAdapter.name).toBe("workday");
@@ -16,22 +19,26 @@ describe("workdayAdapter", () => {
 
   it("fetchJobs builds the correct POST URL from a composite slug", async () => {
     const fetchImpl = vi.fn().mockImplementation((url: string, init: RequestInit) => {
+      if (init.method === "GET") {
+        return Promise.resolve(new Response("<html></html>", { status: 200 }));
+      }
       expect(url).toBe("https://nvidia.wd5.myworkdayjobs.com/wday/cxs/nvidia/NVIDIAExternalCareerSite/jobs");
       expect(init.method).toBe("POST");
       const body = JSON.parse(init.body as string);
       expect(body.limit).toBe(20);
-      // The fixture has total > limit, but for this test we only validate
-      // the first POST. Override total in the mock response so the adapter's
-      // pagination loop exits after one page.
       return Promise.resolve(
-        new Response(JSON.stringify({ ...fixture, total: (fixture as { jobPostings: unknown[] }).jobPostings.length }), { status: 200 })
+        new Response(
+          JSON.stringify({ ...fixture, total: (fixture as { jobPostings: unknown[] }).jobPostings.length }),
+          { status: 200 }
+        )
       );
     });
     const jobs = await workdayAdapter.fetchJobs("nvidia:wd5:NVIDIAExternalCareerSite", { fetchImpl });
     expect(jobs.length).toBeGreaterThan(0);
     expect(jobs[0].source_id).toBeDefined();
-    // Confirm the first POST used offset 0
-    const firstCallBody = JSON.parse((fetchImpl.mock.calls[0][1] as RequestInit).body as string);
+    const firstPost = fetchImpl.mock.calls.find((c) => (c[1] as RequestInit).method === "POST");
+    expect(firstPost).toBeDefined();
+    const firstCallBody = JSON.parse((firstPost![1] as RequestInit).body as string);
     expect(firstCallBody.offset).toBe(0);
   });
 
@@ -64,6 +71,9 @@ describe("workdayAdapter", () => {
   it("paginates beyond the first page when total > limit", async () => {
     const calls: number[] = [];
     const fetchImpl = vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      if (init.method === "GET") {
+        return Promise.resolve(new Response("<html></html>", { status: 200 }));
+      }
       const body = JSON.parse(init.body as string);
       calls.push(body.offset);
       const totalAvailable = 45;
@@ -88,6 +98,9 @@ describe("workdayAdapter", () => {
 
   it("caps fetch at 200 jobs even if total is higher", async () => {
     const fetchImpl = vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      if (init.method === "GET") {
+        return Promise.resolve(new Response("<html></html>", { status: 200 }));
+      }
       const body = JSON.parse(init.body as string);
       const offset = body.offset;
       return Promise.resolve(new Response(JSON.stringify({
@@ -103,5 +116,51 @@ describe("workdayAdapter", () => {
     });
     const jobs = await workdayAdapter.fetchJobs("nvidia:wd5:NVIDIAExternalCareerSite", { fetchImpl });
     expect(jobs.length).toBe(200);
+  });
+
+  it("does cookie-bootstrap GET when GET response sets cookies, then sends Cookie + CSRF on POST", async () => {
+    const fetchImpl = vi.fn().mockImplementation((url: string, init: RequestInit) => {
+      if (init.method === "GET") {
+        const headers = new Headers();
+        headers.append("set-cookie", "PLAY_SESSION=abc; Path=/");
+        headers.append("set-cookie", "calypso-csrf-token=tok99; Path=/");
+        return Promise.resolve(new Response("<html></html>", { status: 200, headers }));
+      }
+      const reqHeaders = init.headers as Record<string, string>;
+      expect(reqHeaders["Cookie"]).toContain("PLAY_SESSION=abc");
+      expect(reqHeaders["Cookie"]).toContain("calypso-csrf-token=tok99");
+      expect(reqHeaders["X-CALYPSO-CSRF-TOKEN"]).toBe("tok99");
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ ...fixture, total: (fixture as { jobPostings: unknown[] }).jobPostings.length }),
+          { status: 200 }
+        )
+      );
+    });
+    const jobs = await workdayAdapter.fetchJobs("nvidia:wd5:NVIDIAExternalCareerSite", { fetchImpl });
+    expect(jobs.length).toBeGreaterThan(0);
+    const getCalls = fetchImpl.mock.calls.filter((c) => (c[1] as RequestInit).method === "GET");
+    expect(getCalls.length).toBe(1);
+  });
+
+  it("reuses cached cookies on a second fetchJobs call (no second GET)", async () => {
+    const fetchImpl = vi.fn().mockImplementation((url: string, init: RequestInit) => {
+      if (init.method === "GET") {
+        const headers = new Headers();
+        headers.append("set-cookie", "PLAY_SESSION=abc; Path=/");
+        headers.append("set-cookie", "calypso-csrf-token=tok99; Path=/");
+        return Promise.resolve(new Response("<html></html>", { status: 200, headers }));
+      }
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ ...fixture, total: (fixture as { jobPostings: unknown[] }).jobPostings.length }),
+          { status: 200 }
+        )
+      );
+    });
+    await workdayAdapter.fetchJobs("nvidia:wd5:NVIDIAExternalCareerSite", { fetchImpl });
+    await workdayAdapter.fetchJobs("nvidia:wd5:NVIDIAExternalCareerSite", { fetchImpl });
+    const getCalls = fetchImpl.mock.calls.filter((c) => (c[1] as RequestInit).method === "GET");
+    expect(getCalls.length).toBe(1);
   });
 });
