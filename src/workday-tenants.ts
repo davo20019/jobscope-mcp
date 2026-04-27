@@ -7,6 +7,7 @@ import type { CompanyRef } from "./schemas";
 // pipeline (Plan 2B) will eventually re-validate these on a schedule.
 export const WORKDAY_TENANTS: CompanyRef[] = [
   { name: "Albemarle Corporation", company_slug: "albemarle", ats: "workday", ats_slug: "albemarle:wd5:External", tags: ["enterprise", "manufacturing"] },
+  { name: "Capital One", company_slug: "capitalone", ats: "workday", ats_slug: "capitalone:wd12:Capital_One", tags: ["enterprise", "finance"] },
   { name: "Boeing", company_slug: "boeing", ats: "workday", ats_slug: "boeing:wd1:EXTERNAL_CAREERS", tags: ["enterprise", "manufacturing"] },
   { name: "Caterpillar", company_slug: "cat", ats: "workday", ats_slug: "cat:wd5:CaterpillarCareers", tags: ["enterprise", "manufacturing"] },
   { name: "Cigna", company_slug: "cigna", ats: "workday", ats_slug: "cigna:wd5:CignaCareers", tags: ["enterprise", "healthcare"] },
@@ -15,6 +16,7 @@ export const WORKDAY_TENANTS: CompanyRef[] = [
   { name: "Equifax", company_slug: "equifax", ats: "workday", ats_slug: "equifax:wd5:External", tags: ["enterprise", "finance"] },
   { name: "Illinois Tool Works", company_slug: "itw", ats: "workday", ats_slug: "itw:wd5:External", tags: ["enterprise", "manufacturing"] },
   { name: "LabCorp", company_slug: "labcorp", ats: "workday", ats_slug: "labcorp:wd1:External", tags: ["enterprise", "healthcare"] },
+  { name: "Mastercard", company_slug: "mastercard", ats: "workday", ats_slug: "mastercard:wd1:CorporateCareers", tags: ["enterprise", "finance"] },
   { name: "Leidos", company_slug: "leidos", ats: "workday", ats_slug: "leidos:wd5:External", tags: ["enterprise", "government"] },
   { name: "Micron Technology", company_slug: "micron", ats: "workday", ats_slug: "micron:wd1:External", tags: ["enterprise", "tech"] },
   { name: "NVIDIA", company_slug: "nvidia", ats: "workday", ats_slug: "nvidia:wd5:NVIDIAExternalCareerSite", tags: ["enterprise", "tech"] },
