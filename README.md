@@ -4,13 +4,15 @@ Open-source Model Context Protocol (MCP) server that gives AI agents (Claude Cod
 
 The agent supplies reasoning and memory. jobscope-mcp supplies normalized, multi-source job search.
 
-## Sources supported (v1)
+## Sources supported
 
-- Greenhouse (`boards-api.greenhouse.io`)
-- Lever (`api.lever.co`)
-- Ashby (`api.ashbyhq.com`)
+- **Greenhouse** (`boards-api.greenhouse.io`) — tech startups and scale-ups
+- **Lever** (`api.lever.co`) — tech startups and scale-ups
+- **Ashby** (`api.ashbyhq.com`) — tech startups and scale-ups
+- **Workday** (`*.myworkdayjobs.com`) — Fortune 500 enterprise (e.g., NVIDIA, Pfizer, Cigna, Mastercard, Capital One, Boeing, Cornell). Uses a CSRF cookie-bootstrap step (GET first, then POST) to authenticate.
+- **USAJobs** (`data.usajobs.gov`) — US federal employment across every sector and every state
 
-The MCP bundles a hand-curated company directory covering these three platforms and queries their public JSON APIs directly at request time.
+The MCP bundles a hand-curated company directory of 59 companies and queries the public JSON APIs of these five platforms directly at request time. The Workday tenant list is small relative to Workday's full footprint because most tenants require accurate `tenant:wd-shard:career-site` URL discovery; the automated seed pipeline (future work) will expand coverage by scraping company career pages and following redirects.
 
 ## Tools
 
