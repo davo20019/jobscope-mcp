@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-26T00:00:00Z",
+  "generated_at": "2026-05-19T00:00:00Z",
   "companies": [
     { "name": "Stripe", "company_slug": "stripe", "ats": "greenhouse", "ats_slug": "stripe", "tags": ["payments", "fintech"] },
     { "name": "Airbnb", "company_slug": "airbnb", "ats": "greenhouse", "ats_slug": "airbnb", "tags": ["marketplace", "travel"] },
@@ -16,6 +16,8 @@
     { "name": "Cloudflare", "company_slug": "cloudflare", "ats": "greenhouse", "ats_slug": "cloudflare", "tags": ["networking", "security"] },
     { "name": "Databricks", "company_slug": "databricks", "ats": "greenhouse", "ats_slug": "databricks", "tags": ["data", "ai"] },
     { "name": "Pinterest", "company_slug": "pinterest", "ats": "greenhouse", "ats_slug": "pinterest", "tags": ["social", "ecommerce"] },
+    { "name": "Glean", "company_slug": "glean", "ats": "greenhouse", "ats_slug": "gleanwork", "tags": ["ai", "enterprise-search"] },
+    { "name": "Sourcegraph", "company_slug": "sourcegraph", "ats": "greenhouse", "ats_slug": "sourcegraph91", "tags": ["dev-tools", "ai"] },
     { "name": "Plaid", "company_slug": "plaid", "ats": "lever", "ats_slug": "plaid", "tags": ["fintech", "payments"] },
     { "name": "Palantir", "company_slug": "palantir", "ats": "lever", "ats_slug": "palantir", "tags": ["data", "analytics"] },
     { "name": "Netflix", "company_slug": "netflix", "ats": "lever", "ats_slug": "netflix", "tags": ["streaming", "entertainment"] },
@@ -37,6 +39,9 @@
     { "name": "Perplexity", "company_slug": "perplexity", "ats": "ashby", "ats_slug": "perplexity", "tags": ["ai", "search"] },
     { "name": "Runway", "company_slug": "runway", "ats": "ashby", "ats_slug": "runway", "tags": ["ai", "creative"] },
     { "name": "Cursor", "company_slug": "cursor", "ats": "ashby", "ats_slug": "cursor", "tags": ["ai", "dev-tools"] },
+    { "name": "OpenAI", "company_slug": "openai", "ats": "ashby", "ats_slug": "openai", "tags": ["ai", "llm"] },
+    { "name": "Pinecone", "company_slug": "pinecone", "ats": "ashby", "ats_slug": "pinecone", "tags": ["ai", "database"] },
+    { "name": "LangChain", "company_slug": "langchain", "ats": "ashby", "ats_slug": "langchain", "tags": ["ai", "dev-tools"] },
     { "name": "Albemarle Corporation", "company_slug": "albemarle", "ats": "workday", "ats_slug": "albemarle:wd5:External", "tags": ["enterprise", "manufacturing"] },
     { "name": "Capital One", "company_slug": "capitalone", "ats": "workday", "ats_slug": "capitalone:wd12:Capital_One", "tags": ["enterprise", "finance"] },
     { "name": "Boeing", "company_slug": "boeing", "ats": "workday", "ats_slug": "boeing:wd1:EXTERNAL_CAREERS", "tags": ["enterprise", "manufacturing"] },
